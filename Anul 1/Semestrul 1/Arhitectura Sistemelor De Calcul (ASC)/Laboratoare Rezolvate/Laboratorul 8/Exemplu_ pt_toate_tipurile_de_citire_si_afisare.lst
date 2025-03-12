@@ -1,0 +1,108 @@
+     1                                  bits 32
+     2                                  global start        
+     3                                  extern exit, printf, scanf, fopen, fprintf, fclose, fread
+     4                                  import exit msvcrt.dll    
+     5                                  import printf msvcrt.dll
+     6                                  import scanf msvcrt.dll
+     7                                  import fopen msvcrt.dll
+     8                                  import fprintf msvcrt.dll
+     9                                  import fclose msvcrt.dll
+    10                                  import fread msvcrt.dll
+    11                                  
+    12                                  segment data use32 class=data
+    13 00000000 00000000                    num1 dd 0       ; primul numar
+    14 00000004 00000000                    num2 dd 0       ; al doilea numar
+    15 00000008 00000000                    suma dd 0       ; suma numerelor
+    16 0000000C FFFFFFFF                    descriptor_fis dd -1
+    17                                      
+    18 00000010 72657A756C74617465-         nume_fisier db "rezultate.txt", 0
+    18 00000019 2E74787400         
+    19 0000001E 7700                        mod_scriere db "w", 0
+    20                                      
+    21 00000020 496E74726F64756365-         msg_num1 db "Introduceti primul numar: ", 0
+    21 00000029 7469207072696D756C-
+    21 00000032 206E756D61723A2000 
+    22 0000003B 496E74726F64756365-         msg_num2 db "Introduceti al doilea numar: ", 0
+    22 00000044 746920616C20646F69-
+    22 0000004D 6C6561206E756D6172-
+    22 00000056 3A2000             
+    23 00000059 53756D61206E756D65-         msg_suma db "Suma numerelor este: %d", 10, 0
+    23 00000062 72656C6F7220657374-
+    23 0000006B 653A2025640A00     
+    24 00000072 52657A756C74617475-         msg_salvare db "Rezultatul a fost salvat in fisierul rezultate.txt", 10, 0
+    24 0000007B 6C206120666F737420-
+    24 00000084 73616C76617420696E-
+    24 0000008D 20666973696572756C-
+    24 00000096 2072657A756C746174-
+    24 0000009F 652E7478740A00     
+    25 000000A6 256400                      format_nr db "%d", 0
+    26 000000A9 5072696D756C206E75-         format_fisier db "Primul numar: %d", 10, "Al doilea numar: %d", 10, "Suma lor este: %d", 10, 0
+    26 000000B2 6D61723A2025640A41-
+    26 000000BB 6C20646F696C656120-
+    26 000000C4 6E756D61723A202564-
+    26 000000CD 0A53756D61206C6F72-
+    26 000000D6 20657374653A202564-
+    26 000000DF 0A00               
+    27                                  
+    28                                  segment code use32 class=code
+    29                                      start:
+    30                                          ; Citim primul numar
+    31 00000000 68[20000000]                    push dword msg_num1
+    32 00000005 FF15[00000000]                  call [printf]
+    33 0000000B 83C404                          add esp, 4
+    34                                          
+    35 0000000E 68[00000000]                    push dword num1
+    36 00000013 68[A6000000]                    push dword format_nr
+    37 00000018 FF15[00000000]                  call [scanf]
+    38 0000001E 83C408                          add esp, 4*2
+    39                                          
+    40                                          ; Citim al doilea numar
+    41 00000021 68[3B000000]                    push dword msg_num2
+    42 00000026 FF15[00000000]                  call [printf]
+    43 0000002C 83C404                          add esp, 4
+    44                                          
+    45 0000002F 68[04000000]                    push dword num2
+    46 00000034 68[A6000000]                    push dword format_nr
+    47 00000039 FF15[00000000]                  call [scanf]
+    48 0000003F 83C408                          add esp, 4*2
+    49                                          
+    50                                          ; Calculam suma
+    51 00000042 A1[00000000]                    mov eax, [num1]
+    52 00000047 0305[04000000]                  add eax, [num2]
+    53 0000004D A3[08000000]                    mov [suma], eax
+    54                                          
+    55                                          ; Afisam suma pe ecran
+    56 00000052 FF35[08000000]                  push dword [suma]
+    57 00000058 68[59000000]                    push dword msg_suma
+    58 0000005D FF15[00000000]                  call [printf]
+    59 00000063 83C408                          add esp, 4*2
+    60                                          
+    61                                          ; Deschidem fisierul pentru a salva rezultatele
+    62 00000066 68[1E000000]                    push dword mod_scriere
+    63 0000006B 68[10000000]                    push dword nume_fisier
+    64 00000070 FF15[00000000]                  call [fopen]
+    65 00000076 83C408                          add esp, 4*2
+    66                                          
+    67 00000079 A3[0C000000]                    mov [descriptor_fis], eax
+    68                                          
+    69                                          ; Scriem rezultatele in fisier
+    70 0000007E FF35[08000000]                  push dword [suma]
+    71 00000084 FF35[04000000]                  push dword [num2]
+    72 0000008A FF35[00000000]                  push dword [num1]
+    73 00000090 68[A9000000]                    push dword format_fisier
+    74 00000095 FF35[0C000000]                  push dword [descriptor_fis]
+    75 0000009B FF15[00000000]                  call [fprintf]
+    76 000000A1 83C414                          add esp, 4*5
+    77                                          
+    78                                          ; Inchidem fisierul
+    79 000000A4 FF35[0C000000]                  push dword [descriptor_fis]
+    80 000000AA FF15[00000000]                  call [fclose]
+    81 000000B0 83C404                          add esp, 4
+    82                                          
+    83                                          ; Afisam mesaj de confirmare
+    84 000000B3 68[72000000]                    push dword msg_salvare
+    85 000000B8 FF15[00000000]                  call [printf]
+    86 000000BE 83C404                          add esp, 4
+    87                                          
+    88 000000C1 6A00                            push dword 0
+    89 000000C3 FF15[00000000]                  call [exit]
